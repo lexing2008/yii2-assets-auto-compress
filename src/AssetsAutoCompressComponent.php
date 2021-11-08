@@ -457,6 +457,18 @@ JS
     }
 
     /**
+     * Удалить BOM из строки
+     * @param string $str - исходная строка
+     * @return string $str - строка без BOM
+     */
+    public function removeBOM(string $str) {
+        if(substr($str, 0, 3) == pack('CCC', 0xef, 0xbb, 0xbf)) {
+            $str = substr($str, 3);
+        }
+        return $str;
+    }
+
+    /**
      * @param array $files
      * @return array
      */
@@ -578,7 +590,7 @@ JS
         }
         $filesSize = filesize($filePath);
         if ($filesSize) {
-            return fread($file, $filesSize);
+            return $this->removeBOM(fread($file, $filesSize));
         }
         fclose($file);
     }
@@ -601,7 +613,7 @@ JS
             ->send();
 
         if ($response->isOk) {
-            return $response->content;
+            return $this->removeBOM($response->content);
         }
 
         throw new \Exception("File get contents '{$file}' error: ".$response->content);

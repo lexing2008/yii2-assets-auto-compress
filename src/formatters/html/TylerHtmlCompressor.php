@@ -6,10 +6,10 @@
  * @author Semenov Alexander <semenov@skeeks.com>
  */
 
-namespace skeeks\yii2\assetsAuto\formatters\html;
+namespace lexing2008\yii2AssetsAutoCompress\formatters\html;
 
-use skeeks\yii2\assetsAuto\IFormatter;
-use skeeks\yii2\assetsAuto\vendor\HtmlCompressor;
+use lexing2008\yii2AssetsAutoCompress\IFormatter;
+use lexing2008\yii2AssetsAutoCompress\vendor\HtmlCompressor;
 use yii\base\Component;
 
 /**

@@ -1,5 +1,5 @@
 {
-	"name": "lexing2008/yii2-assets-auto-compress",
+	"name": "skeeks/yii2-assets-auto-compress",
 	"description": "Automatically compile and merge files js + css + html in yii2 project",
 	"keywords": ["yii", "app", "skeeks", "sx", "framework", "js", "css", "assets", "auto assets"],
     "homepage": "https://www.skeeks.com/",
@@ -31,7 +31,7 @@
 	},
     "autoload": {
         "psr-4": {
-            "skeeks\\yii2\\assetsAuto\\": "src/"
+            "lexing2008\\yii2AssetsAutoCompress\\": "src/"
         }
     }
 }

@@ -6,9 +6,9 @@
  * @author Semenov Alexander <semenov@skeeks.com>
  */
 
-namespace skeeks\yii2\assetsAuto\formatters\html;
+namespace lexing2008\yii2AssetsAutoCompress\formatters\html;
 
-use skeeks\yii2\assetsAuto\IFormatter;
+use lexing2008\yii2AssetsAutoCompress\IFormatter;
 use yii\base\Component;
 
 /**

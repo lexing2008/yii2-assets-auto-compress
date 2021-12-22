@@ -469,7 +469,7 @@ JS
                 $fileName = $this->getFullFileName($fileName);
                 if(file_exists($fileName)){
                     $timestamps[] = filemtime($fileName);
-                } else {
+                } elseif (YII_ENV == 'dev') {
                     throw new \Exception("File {$file}  {$fileName} not found");
                 }
             }
@@ -602,12 +602,17 @@ JS
         }
 
         if (!file_exists($filePath)) {
-            throw new \Exception("Read file error '{$filePath}'");
+            if (YII_ENV == 'dev') {
+                throw new \Exception("Read file error '{$filePath}'");
+            }
         }
 
         $file = fopen($filePath, "r");
         if (!$file) {
-            throw new \Exception("Unable to open file: '{$filePath}'");
+            if (YII_ENV == 'dev') {
+                throw new \Exception("Unable to open file: '{$filePath}'");
+            }
+            return '';
         }
         $filesSize = filesize($filePath);
         if ($filesSize) {
@@ -636,8 +641,9 @@ JS
         if ($response->isOk) {
             return $this->removeBOM($response->content);
         }
-
-        throw new \Exception("File get contents '{$file}' error: ".$response->content);
+        if (YII_ENV == 'dev') {
+            throw new \Exception("File get contents '{$file}' error: " . $response->content);
+        }
     }
     /**
      * @param $parts

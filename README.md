@@ -18,13 +18,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist skeeks/yii2-assets-auto-compress "*"
+php composer.phar require --prefer-dist lexing2008/yii2-assets-auto-compress "*"
 ```
 
 or add
 
 ```
-"skeeks/yii2-assets-auto-compress": "*"
+"lexing2008/yii2-assets-auto-compress": "*"
 ```
 
 
@@ -40,7 +40,7 @@ How to use
     //....
         'assetsAutoCompress' =>
         [
-            'class'         => '\skeeks\yii2\assetsAuto\AssetsAutoCompressComponent',
+            'class'         => '\lexing2008\yii2AssetsAutoCompress\AssetsAutoCompressComponent',
         ],
     //....
     ]
@@ -57,7 +57,7 @@ How to use
     'components' => [
         //....
         'assetsAutoCompress' => [
-            'class'   => '\skeeks\yii2\assetsAuto\AssetsAutoCompressComponent',
+            'class'   => \lexing2008\yii2AssetsAutoCompress\AssetsAutoCompressComponent::class,
             'enabled' => true,
             'backendUrlFolder' => '/admin/', // папка backend. обязательно в //
             'readFileTimeout' => 3,           //Time in seconds for reading each asset file
@@ -89,16 +89,16 @@ How to use
 
             'htmlFormatter' => [
                 //Enable compression html
-                'class'         => 'skeeks\yii2\assetsAuto\formatters\html\TylerHtmlCompressor',
+                'class'         => 'lexing2008\yii2AssetsAutoCompress\formatters\html\TylerHtmlCompressor',
                 'extra'         => false,       //use more compact algorithm
                 'noComments'    => true,        //cut all the html comments
                 'maxNumberRows' => 50000,       //The maximum number of rows that the formatter runs on
 
                 //or
 
-                'class' => 'skeeks\yii2\assetsAuto\formatters\html\MrclayHtmlCompressor',
+                'class' => 'lexing2008\yii2AssetsAutoCompress\formatters\html\MrclayHtmlCompressor',
 
-                //or any other your handler implements skeeks\yii2\assetsAuto\IFormatter interface
+                //or any other your handler implements lexing2008\yii2AssetsAutoCompress\assetsAuto\IFormatter interface
 
                 //or false
             ],

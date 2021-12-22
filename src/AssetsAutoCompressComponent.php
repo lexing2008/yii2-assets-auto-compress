@@ -314,8 +314,8 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
                     // исключаем из минификации файлы указанные в $this->jsFilesExclude
                     $excludedFiles = [];
                     foreach ($files as $file => $script){
+                        $file = preg_replace("/\?v=\d+$/Ui", '', $file); // удаляем временную метку в конце файла
                         if(in_array($file, $this->jsFilesExclude)){
-                            echo '11111';
                             $excludedFiles[$file] = $script;
                             unset($files[$file]);
                         }

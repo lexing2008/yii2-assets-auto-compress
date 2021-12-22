@@ -80,6 +80,10 @@ How to use
             'jsFileCompress'                => true,        //Enable compression and processing js before saving a file
             'jsFileCompressFlaggedComments' => true,        //Cut comments during processing js
 
+            'jsFilesExclude' => [ // исключает перечисленные js файлы из компиляции всех js файлов в один
+                '/common/web/js/vue-app-scripts.js',
+            ],
+
             'noIncludeJsFilesOnPjax' => true,        //Do not connect the js files when all pjax requests when all pjax requests when enabled jsFileCompile
             'noIncludeCssFilesOnPjax' => true,        //Do not connect the css files when all pjax requests when all pjax requests when enabled cssFileCompile
 

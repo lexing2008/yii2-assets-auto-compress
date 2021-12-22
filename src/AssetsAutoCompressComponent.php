@@ -150,6 +150,12 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
     public $jsFileCompressFlaggedComments = true;
 
     /**
+     * Исключаем перечисленные файлы из объединения в один
+     * @var array
+     */
+    public $jsFilesExclude = [];
+
+    /**
      * Do not connect the js files when all pjax requests when enabled jsFileCompile
      * @var bool
      */
@@ -305,10 +311,25 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
             \Yii::beginProfile('Compress js files');
             foreach ($view->jsFiles as $pos => $files) {
                 if ($files) {
+                    // исключаем из минификации файлы указанные в $this->jsFilesExclude
+                    $excludedFiles = [];
+                    foreach ($files as $file => $script){
+                        if(in_array($file, $this->jsFilesExclude)){
+                            echo '11111';
+                            $excludedFiles[$file] = $script;
+                            unset($files[$file]);
+                        }
+                    }
+
                     if ($this->jsFileCompileByGroups) {
                         $view->jsFiles[$pos] = $this->_processAndGroupJsFiles($files);
                     } else {
                         $view->jsFiles[$pos] = $this->_processingJsFiles($files);
+                    }
+
+                    // добавляем исключенные из минификации файлы
+                    foreach ($excludedFiles as $file => $script){
+                        $view->jsFiles[$pos][$file] = $script;
                     }
                 }
             }

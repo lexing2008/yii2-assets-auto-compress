@@ -174,6 +174,18 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
      * @var string
      */
     protected $_webroot = '@webroot';
+    
+    /**
+     * Возволяет сбрасывать кэш при каждом запросе
+     * Передавая в этот параметр случайное новое, например time()
+     */
+    public $reframingСacheEveryTime = false;
+
+    /**
+     * @var int значение, которое зменяет хэш параметров настройки, тем самым перестройка кэша минификации происходит при каждом запросе
+     */
+    private $randomValue = 0;
+    
     /**
      * @return IFormatter|bool
      */
@@ -260,7 +272,11 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
      */
     public function bootstrap($app)
     {
-        if ($app instanceof \yii\web\Application) {
+        if ($app instanceof \yii\web\Application){
+            if($this->reframingСacheEveryTime) {
+                $this->randomValue = microtime();
+            }
+
             $app->view->on(View::EVENT_END_PAGE, function (Event $e) use ($app) {
 
 
@@ -307,17 +323,21 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
     {
         //Компиляция файлов js в один.
         //echo "<pre><code>" . print_r($view->jsFiles, true);die;
-        if ($view-->jsFiles && $this->jsFileCompile) {
+//        print_r(array_keys($view->jsFiles[3]));
+        //print_r(array_keys($view->cssFiles));
+        if ($view->jsFiles && $this->jsFileCompile) {
             \Yii::beginProfile('Compress js files');
+
             foreach ($view->jsFiles as $pos => $files) {
                 if ($files) {
                     // исключаем из минификации файлы указанные в $this->jsFilesExclude
                     $excludedFiles = [];
                     foreach ($files as $file => $script){
-                        $file = preg_replace("/\?v=\d+$/Ui", '', $file); // удаляем временную метку в конце файла
-                        if(in_array($file, $this->jsFilesExclude)){
+                        $fileFormated = preg_replace("/\?v=\d+$/Ui", '', $file); // удаляем временную метку в конце файла
+                        if(in_array($fileFormated, $this->jsFilesExclude)){
                             $excludedFiles[$file] = $script;
                             unset($files[$file]);
+                            unset($view->jsFiles[$pos][$file]);
                         }
                     }
 
@@ -336,7 +356,8 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
             \Yii::endProfile('Compress js files');
         }
         //echo "<pre><code>" . print_r($view->jsFiles, true);die;
-
+//         print_r(array_keys($view->jsFiles[3]));
+//        die();
         //Compiling js code that is found in the html code of the page.
         if ($view->js && $this->jsCompress) {
             \Yii::beginProfile('Compress js code');
@@ -607,18 +628,7 @@ JS
             }
         }
 
-        $file = fopen($filePath, "r");
-        if (!$file) {
-            if (YII_ENV == 'dev') {
-                throw new \Exception("Unable to open file: '{$filePath}'");
-            }
-            return '';
-        }
-        $filesSize = filesize($filePath);
-        if ($filesSize) {
-            return $this->removeBOM(fread($file, $filesSize));
-        }
-        fclose($file);
+        return $this->removeBOM(file_get_contents($filePath));
     }
     /**
      * Read file contents
@@ -683,6 +693,32 @@ JS
 
     }
 
+
+    /**
+     * Возвращает содержимое аттрибута media из тега подключения CSS <link >
+     * @param string $tagLink
+     * @return string содержимое аттрибута media
+     */
+    public function getAttributeMediaFromLinkTag(string $tagLink): string
+    {
+        preg_match('/media=\"([^\"]+)\"/Ui', $tagLink, $match);
+
+        return empty($match) ? '' : end($match);
+    }
+
+    /**
+     * Оборачивает CSS медиазапросом
+     * @param string $content
+     * @param $attributeMedia
+     * @return string
+     */
+    public function wrapCssMediaQuery(string &$content, $attributeMedia): string{
+        if(empty($attributeMedia) || strtolower($attributeMedia) == 'none')
+            return $content;
+
+        return '@media ' . $attributeMedia . '{' . $content . '}';
+    }
+
     /**
      * @param array $files
      * @return array
@@ -719,6 +755,8 @@ JS
             $resultContent = [];
             $resultFiles = [];
             foreach ($files as $fileCode => $fileTag) {
+                $attributeMedia = $this->getAttributeMediaFromLinkTag($fileTag);
+                
                 if (Url::isRelative($fileCode)) {
                     $fileCodeLocal = $fileCode;
                     if ($pos = strpos($fileCode, "?")) {
@@ -728,12 +766,16 @@ JS
                     //$fileCodeLocal = $this->webroot.$fileCodeLocal;
                     $fileCodeLocal = $this->getFullFileName($fileCodeLocal);
                     $contentTmp = trim($this->readLocalFile($fileCodeLocal));
+                    if(!empty($attributeMedia)){
+                        $contentTmp = $this->wrapCssMediaQuery($contentTmp, $attributeMedia);
+                    }
 
                     //$contentTmp         = trim($this->fileGetContents( Url::to(\Yii::getAlias($fileCode), true) ));
 
                     $fileCodeTmp = explode("/", $fileCode);
                     unset($fileCodeTmp[count($fileCodeTmp) - 1]);
                     $prependRelativePath = implode("/", $fileCodeTmp)."/";
+
                     $contentTmp = \Minify_CSS::minify($contentTmp, [
                         "prependRelativePath" => $prependRelativePath,
 
@@ -748,7 +790,11 @@ JS
                 } else {
                     if ($this->cssFileRemouteCompile) {
                         //Try to download the deleted file
-                        $resultContent[] = trim($this->fileGetContents($fileCode));
+                        $contentTmp = trim($this->fileGetContents($fileCode));
+                        if(!empty($attributeMedia)){
+                            $contentTmp = $this->wrapCssMediaQuery($contentTmp, $attributeMedia);
+                        }
+                        $resultContent[] = $contentTmp;
                     } else {
                         $resultFiles[$fileCode] = $fileTag;
                     }
@@ -760,7 +806,7 @@ JS
         }
 
         if ($resultContent) {
-            $content = implode("\n", $resultContent);
+            $content = implode("\n\n\n/*======LEXING=====*/\n\n\n", $resultContent);
             if (!is_dir($rootDir)) {
                 if (!FileHelper::createDirectory($rootDir, 0777)) {
                     return $files;

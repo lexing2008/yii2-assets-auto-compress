@@ -151,6 +151,9 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
 
     /**
      * Исключаем перечисленные файлы из объединения в один
+     * Можно не бояться указывать файлы в папке assets
+     * Пример: '/admin/assets/e102ecc7/ckeditor.js',
+     * В файлах содержащих в себе assets/ сравнение идет только по имени смого файла. В примере это ckeditor.js
      * @var array
      */
     public $jsFilesExclude = [];
@@ -316,6 +319,28 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
             });
         }
     }
+
+    /**
+     * Проверяет есть ли файл в исключенных
+     * @param string $file
+     * @return bool
+     */
+    public function isExcludedJsFile(string $file): bool {
+        if(in_array($file, $this->jsFilesExclude)){
+            return true;
+        }
+
+        if(strpos($file, 'assets/')!== false){
+            $baseNameFile = basename($file);
+            foreach ($this->jsFilesExclude as $excludeFile){
+                if(strpos($excludeFile, 'assets/') !== false && $baseNameFile == basename($excludeFile)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
     /**
      * @param View $view
      */
@@ -334,7 +359,8 @@ class AssetsAutoCompressComponent extends Component implements BootstrapInterfac
                     $excludedFiles = [];
                     foreach ($files as $file => $script){
                         $fileFormated = preg_replace("/\?v=\d+$/Ui", '', $file); // удаляем временную метку в конце файла
-                        if(in_array($fileFormated, $this->jsFilesExclude)){
+
+                        if($this->isExcludedJsFile($fileFormated)){
                             $excludedFiles[$file] = $script;
                             unset($files[$file]);
                             unset($view->jsFiles[$pos][$file]);
@@ -806,7 +832,7 @@ JS
         }
 
         if ($resultContent) {
-            $content = implode("\n\n\n/*======LEXING=====*/\n\n\n", $resultContent);
+            $content = implode("\n", $resultContent);
             if (!is_dir($rootDir)) {
                 if (!FileHelper::createDirectory($rootDir, 0777)) {
                     return $files;
